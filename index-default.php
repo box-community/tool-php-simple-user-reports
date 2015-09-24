@@ -1,6 +1,7 @@
 <?php
     error_reporting(E_ALL);
     ini_set("display_errors", 1);
+    date_default_timezone_set('America/New_York');
     
     /*
      * One-page script for automatically getting reports from box and displaying or dumping 
@@ -41,8 +42,9 @@
             'clientId'      => '', // from box dev console for your app
             'clientSecret'  => '', // from box dev console for your app
             'csrfPreventionString' => '', // for checking to make sure the returned information came from you and not a man-in-the-middle
-            'redirectUri'   => $myAppConfigArray['baseUrl'] . '/index.php?page=exchange-code-for-token', // the URL to return to, to convert the code for an access & refresh token set
-            'apiBaseUrl'    => 'https://api.box.com/2.0/', // base URL for the box api calls
+            // dont change anything under here
+            'redirectUri'   => $myAppConfigArray['baseUrl'] . '/index.php?page=exchange-code-for-token', // don't change this.
+            'apiBaseUrl'    => 'https://api.box.com/2.0/', // base URL for the box api calls. Dont change this.
         );
     }
     
@@ -62,60 +64,51 @@
 
     <!-- SECTION FOR STARTING THE PROCESS THE FIRST TIME ONLY -->
     <?php $boxAppConfigArray = boxAppConfigArray(); ?>
-    <html lang="en">
-        <head>
-          <meta charset="utf-8">
-          <meta http-equiv="X-UA-Compatible" content="IE=edge">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-          <meta name="description" content="">
-          <meta name="author" content="">
-          <link rel="icon" href="../../favicon.ico">
+    <!DOCTYPE html>
+            <html lang="en">
+              <head>
+                <meta charset="utf-8">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Box Reports</title>
+                <!-- Bootstrap core CSS -->
+                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+                <!-- Custom styles for this template -->
+                <link href="style.css" rel="stylesheet">
+              </head>
+              <body>
+                <nav class="navbar navbar-inverse navbar-fixed-top">
+                  <div class="container">
+                    <div class="navbar-header">
+                      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                      </button>
+                      <a class="navbar-brand" href="index.php">Box Reports</a>
+                    </div>
+                    <div id="navbar" class="collapse navbar-collapse">
+                      <ul class="nav navbar-nav">
+                        <li class="active"><a href="index.php">Home</a></li>
+                        <li><a href="index.php?page=getOneTimeToken">Get Token</a></li>
+                        <li><a href="index.php?page=getAllUsersLive">Get Live Data</a></li>
+                        <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get Live & Update DB</a></li>
+                        <li><a href="index.php?page=getAllUsers">View Local Data</a></li>
+                      </ul>
+                    </div><!--/.nav-collapse -->
+                  </div>
+                </nav>
 
-          <title>Box Reports Simple Example</title>
-
-          <!-- Bootstrap -->
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-            <!-- Optional theme -->
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
-            <link rel="stylesheet" href="style.css">
-              <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-              <!--[if lt IE 9]>
-                <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-                <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-              <![endif]-->
-        </head>
-        <body>
-          <nav class="navbar navbar-inverse navbar-fixed-top">
-            <div class="container">
-              <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                  <span class="sr-only">Toggle navigation</span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#">Box Reports - Simple Example</a>
-              </div>
-              <div id="navbar" class="collapse navbar-collapse">
-                <ul class="nav navbar-nav">
-                  <li class="active"><a href="index.php">Home</a></li>
-                  <li><a href="index.php?page=getOneTimeToken">Get One-Time Token</a></li>
-                  <li><a href="index.php?page=getAllUsersLive">Get All Users (Live)</a></li>
-                  <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get All Users (Live) & Update DB</a></li>
-                  <li><a href="index.php?page=getAllUsers">View DB Records</a></li>
-                </ul>
-              </div><!--/.nav-collapse -->
-            </div>
-          </nav>
-          <div class="container">
+                <div class="container">
               <h1>Simple Box Reports</h1>
               <p>Everything is in one file (sure, it's busy, but it's easy to understand... i think.</p>
               <h2>Pre-Requisites</h2>
               <ul>
                       <li>MySQL Database</li>
                       <li>PHP 5.3+</li>
-                      <li>Box Developer Console Access (<a href="http://developers.box.com" title="Box Developer Console">developers.box.com</a>)</li>
+                      <li>Box Developer Console Access (<a target="_blank" href="http://developers.box.com" title="Box Developer Console">developers.box.com</a>)</li>
+                      <li>A Box Admin or Co-Admin account</li>
               </ul>
               <h2>Configuration & Initial Set up</h2>
               <ol>
@@ -123,7 +116,7 @@
                     <li>Create a database for this file to put data into</li>
                     <li>Import the install.sql file into that database. You should end up with 3 tables</li>
                     <li>
-                        Visit the Box Developer Console and set up a new app to use <a href="http://developers.box.com" title="Box Developer Console">developers.box.com</a>)
+                        Visit the Box Developer Console and set up a new app to use <a target="_blank" href="http://developers.box.com" title="Box Developer Console">developers.box.com</a>)
                         <ul>
                             <li>Call the app anything you want. How about "Box Reports - Simple App" or something like that?</li>
                             <li>In the "scope" checkbox section, check the boxes for "Manage an enterprise" and "Manage an enterprise's managed users"</li>
@@ -145,7 +138,7 @@
               <h2>Manual, or Automatic.... choose wisely (not really)</h2>
               <ul>
                     <li>You can use the menu items above to use this tool manually, OR</li>
-                    <li>Set up a cron-job that runs every day/week to visit http://localhost/box-reports/index.php?getAllUsersLive&updateDatabaseToo=1 </li>
+                    <li>Set up a cron-job that runs every day/week to visit http://localhost/box-reports/index.php?page=getAllUsersLive&updateDatabaseToo=1 </li>
                     <li>As long as you perform a live users lookup in this tool once every 60 days, you won't have to do the "one time token" step again.</li>
               </ul>
           </div><!-- /.container -->
@@ -154,83 +147,70 @@
           <!-- Bootstrap core JavaScript
           ================================================== -->
           <!-- Placed at the end of the document so the pages load faster -->
-          <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+                      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
         </body>
+
       </html>
     
 <?php elseif ($thisPage == 'getOneTimeToken'): ?>
 
     <!-- SECTION FOR STARTING THE PROCESS THE FIRST TIME ONLY -->
     <?php $boxAppConfigArray = boxAppConfigArray(); ?>
-    <html lang="en">
-        <head>
-          <meta charset="utf-8">
-          <meta http-equiv="X-UA-Compatible" content="IE=edge">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-          <meta name="description" content="">
-          <meta name="author" content="">
-          <link rel="icon" href="../../favicon.ico">
+    <!DOCTYPE html>
+            <html lang="en">
+              <head>
+                <meta charset="utf-8">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Box Reports</title>
+                <!-- Bootstrap core CSS -->
+                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+                <!-- Custom styles for this template -->
+                <link href="style.css" rel="stylesheet">
+              </head>
+              <body>
+                <nav class="navbar navbar-inverse navbar-fixed-top">
+                  <div class="container">
+                    <div class="navbar-header">
+                      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                      </button>
+                      <a class="navbar-brand" href="index.php">Box Reports</a>
+                    </div>
+                    <div id="navbar" class="collapse navbar-collapse">
+                      <ul class="nav navbar-nav">
+                        <li class="active"><a href="index.php">Home</a></li>
+                        <li><a href="index.php?page=getOneTimeToken">Get Token</a></li>
+                        <li><a href="index.php?page=getAllUsersLive">Get Live Data</a></li>
+                        <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get Live & Update DB</a></li>
+                        <li><a href="index.php?page=getAllUsers">View Local Data</a></li>
+                      </ul>
+                    </div><!--/.nav-collapse -->
+                  </div>
+                </nav>
 
-          <title>Box Reports Simple Example</title>
+                <div class="container">
 
-          <!-- Bootstrap -->
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-            <!-- Optional theme -->
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
-            <link rel="stylesheet" href="style.css">
-              <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-              <!--[if lt IE 9]>
-                <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-                <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-              <![endif]-->
-        </head>
-        <body>
-          <nav class="navbar navbar-inverse navbar-fixed-top">
-            <div class="container">
-              <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                  <span class="sr-only">Toggle navigation</span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#">Box Reports - Simple Example</a>
-              </div>
-              <div id="navbar" class="collapse navbar-collapse">
-                <ul class="nav navbar-nav">
-                  <li class="active"><a href="index.php">Home</a></li>
-                  <li><a href="index.php?page=getOneTimeToken">Get One-Time Token</a></li>
-                  <li><a href="index.php?page=getAllUsersLive">Get All Users (Live)</a></li>
-                  <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get All Users (Live) & Update DB</a></li>
-                  <li><a href="index.php?page=getAllUsers">View DB Records</a></li>
-                </ul>
-              </div><!--/.nav-collapse -->
-            </div>
-          </nav>
-          <div class="container">
-
-            <div class="starter-template">
               <h1>One-Time Get Box Code</h1>
                 <p class="lead">Click the button below to begin the process. You will be redirected to login to Box (use an Admin/Co-Admin acct). Then when the process is finished, an access token and a refresh token will be stored in the local database for continued use.</p>
-                <p class="lead">Note: You should only do this if the existing token is not working (expired/invalidated/revoked etc). This manual step should only be required the very first time you want to run this script, but then not again (as long as you use it once every 60 days).</p>
+                <p class="lead">Note: You should only do this if the existing token is not working (expired/invalidated/revoked etc). This manual step should only be required the very first time you want to run this script, but then not again (as long as you get live data once every 60 days).</p>
                 <form action="<?php echo "https://app.box.com/api/oauth2/authorize?response_type=code&client_id=" . $boxAppConfigArray['clientId'] . "&state=" . $boxAppConfigArray['csrfPreventionString']; ?>" method="POST" title="Get Box Dev Token form">
                     <p><input class="btn btn-success" type="submit" name="submit" value="Begin Box Token Process"></p>
                 </form>
-            </div>
-          </div><!-- /.container -->
-
-
-          <!-- Bootstrap core JavaScript
-          ================================================== -->
-          <!-- Placed at the end of the document so the pages load faster -->
-          <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+            
+          </div><!-- /.container -->          
+                        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
         </body>
+
+        
       </html>
     
-<?php
-
-    elseif($thisPage == 'exchange-code-for-token'):
+    <?php elseif($thisPage == 'exchange-code-for-token'):
 
         $state = filter_input(INPUT_GET, 'state');
         $code = filter_input(INPUT_GET, 'code');
@@ -260,153 +240,140 @@
             updateRefreshTokenInDatabase($result->refresh_token, 'update');
         }
         
-        ?>
+    ?>
         
-        <html lang="en">
-        <head>
-          <meta charset="utf-8">
-          <meta http-equiv="X-UA-Compatible" content="IE=edge">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-          <meta name="description" content="">
-          <meta name="author" content="">
-          <link rel="icon" href="../../favicon.ico">
+        <!DOCTYPE html>
+            <html lang="en">
+              <head>
+                <meta charset="utf-8">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Box Reports</title>
+                <!-- Bootstrap core CSS -->
+                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+                <!-- Custom styles for this template -->
+                <link href="style.css" rel="stylesheet">
+              </head>
+              <body>
+                <nav class="navbar navbar-inverse navbar-fixed-top">
+                  <div class="container">
+                    <div class="navbar-header">
+                      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                      </button>
+                      <a class="navbar-brand" href="index.php">Box Reports</a>
+                    </div>
+                    <div id="navbar" class="collapse navbar-collapse">
+                      <ul class="nav navbar-nav">
+                        <li class="active"><a href="index.php">Home</a></li>
+                        <li><a href="index.php?page=getOneTimeToken">Get Token</a></li>
+                        <li><a href="index.php?page=getAllUsersLive">Get Live Data</a></li>
+                        <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get Live & Update DB</a></li>
+                        <li><a href="index.php?page=getAllUsers">View Local Data</a></li>
+                      </ul>
+                    </div><!--/.nav-collapse -->
+                  </div>
+                </nav>
 
-          <title>Box Reports Simple Example</title>
+                <div class="container">
 
-          <!-- Bootstrap -->
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-            <!-- Optional theme -->
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
-            <link rel="stylesheet" href="style.css">
-              <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-              <!--[if lt IE 9]>
-                <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-                <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-              <![endif]-->
-        </head>
-        <body>
-          <nav class="navbar navbar-inverse navbar-fixed-top">
-            <div class="container">
-              <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                  <span class="sr-only">Toggle navigation</span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#">Box Reports - Simple Example</a>
-              </div>
-              <div id="navbar" class="collapse navbar-collapse">
-                <ul class="nav navbar-nav">
-                  <li class="active"><a href="index.php">Home</a></li>
-                  <li><a href="index.php?page=getOneTimeToken">Get One-Time Token</a></li>
-                  <li><a href="index.php?page=getAllUsersLive">Get All Users (Live)</a></li>
-                  <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get All Users (Live) & Update DB</a></li>
-                  <li><a href="index.php?page=getAllUsers">View DB Records</a></li>
-                </ul>
-              </div><!--/.nav-collapse -->
-            </div>
-          </nav>
-          <div class="container">
-
-            <div class="starter-template">
-                    <h1>You got a token! He got a token!<br />EVERYONE GOT A TOKENNNNNNN!!!</h1>
+            
+                    <h1>You got a token! We get a token!<br />EVERYONE GETS A TOKENNNNNNN!!!</h1>
                     <p class="lead">Now you are ready to look up your users. Use the links above.</p>
-            </div>
+                    <p class="lead">But seriously, you should not have to get a new token manually again (as long as you use this app/tool/thing to get live data from box at least once every 60 days).</p>
+            
           </div><!-- /.container -->
+                      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
         </body>
+
       </html>
       
-      <?php
+    <?php elseif($thisPage == 'getAllUsersLive' || $thisPage == 'getAllUsers'):
 
-        elseif($thisPage == 'getAllUsersLive'):
+            if($thisPage == 'getAllUsers') {
+                $thisTimestamp = filter_input(INPUT_GET, 'timestamp');
 
-            $updateDatabaseToo = filter_input(INPUT_GET, 'updateDatabaseToo');
+                $allUsers = getUserRecordsFromDatabase($thisTimestamp);
+                
+                if(empty($allUsers)): 
+                    die('no users found in the database'); 
+                endif; 
+            } 
+            if($thisPage == 'getAllUsersLive') {
+                $updateDatabaseToo = filter_input(INPUT_GET, 'updateDatabaseToo');
 
-            $allUsers = getAllUsers($updateDatabaseToo);
-            if(empty($allUsers)): 
-                die('no users found'); 
-            endif; 
+                $allUsers = getAllUsers($updateDatabaseToo);
+                if(empty($allUsers)): 
+                    die('no users found'); 
+                endif; 
+            }
 
-        elseif($thisPage == 'getAllUsers'):
-
-            $thisTimestamp = filter_input(INPUT_GET, 'timestamp');
-
-            $allUsers = getUserRecordsFromDatabase($thisTimestamp);
-            if(empty($allUsers)): 
-                die('no users found'); 
-            endif; 
-        
     ?> 
     <!-- page to display all users --> 
-    <html lang="en">
-        <head>
-          <meta charset="utf-8">
-          <meta http-equiv="X-UA-Compatible" content="IE=edge">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-          <meta name="description" content="">
-          <meta name="author" content="">
-          <link rel="icon" href="../../favicon.ico">
+    <!DOCTYPE html>
+            <html lang="en">
+              <head>
+                <meta charset="utf-8">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Box Reports</title>
+                <!-- Bootstrap core CSS -->
+                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+                <!-- Custom styles for this template -->
+                <link href="style.css" rel="stylesheet">
+              </head>
+              <body>
+                <nav class="navbar navbar-inverse navbar-fixed-top">
+                  <div class="container">
+                    <div class="navbar-header">
+                      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                      </button>
+                      <a class="navbar-brand" href="index.php">Box Reports</a>
+                    </div>
+                    <div id="navbar" class="collapse navbar-collapse">
+                      <ul class="nav navbar-nav">
+                        <li class="active"><a href="index.php">Home</a></li>
+                        <li><a href="index.php?page=getOneTimeToken">Get Token</a></li>
+                        <li><a href="index.php?page=getAllUsersLive">Get Live Data</a></li>
+                        <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get Live & Update DB</a></li>
+                        <li><a href="index.php?page=getAllUsers">View Local Data</a></li>
+                      </ul>
+                    </div><!--/.nav-collapse -->
+                  </div>
+                </nav>
 
-          <title>Box Reports Simple Example</title>
+                <div class="container">
 
-          <!-- Bootstrap -->
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-            <!-- Optional theme -->
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
-            <link rel="stylesheet" href="style.css">
-              <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-              <!--[if lt IE 9]>
-                <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-                <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-              <![endif]-->
-        </head>
-        <body>
-          <nav class="navbar navbar-inverse navbar-fixed-top">
-            <div class="container">
-              <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                  <span class="sr-only">Toggle navigation</span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#">Box Reports - Simple Example</a>
-              </div>
-              <div id="navbar" class="collapse navbar-collapse">
-                <ul class="nav navbar-nav">
-                  <li class="active"><a href="index.php">Home</a></li>
-                  <li><a href="index.php?page=getOneTimeToken">Get One-Time Token</a></li>
-                  <li><a href="index.php?page=getAllUsersLive">Get All Users (Live)</a></li>
-                  <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get All Users (Live) & Update DB</a></li>
-                  <li><a href="index.php?page=getAllUsers">View DB Records</a></li>
-                </ul>
-              </div><!--/.nav-collapse -->
-            </div>
-          </nav>
-          <div class="container">
-
-            <div class="starter-template">
+            
               
                 <?php if($thisPage == 'getAllUsersLive'): ?>
-                    <h1>Display All Users (Live Lookup in Box via API)</h1>
+                <h1>Display All Users<br />(Live Lookup in Box via API)</h1>
                     <h3>Summary</h3>
                     <p>Total Storage Used: <?php echo $allUsers['totalStorage'] / (1024 * 1024 * 1024) . ' GB.'; ?></p>
                     <p>Total Users: <?php echo $allUsers['totalUsers']; ?></p>
                 <?php elseif($thisPage == 'getAllUsers' && $thisTimestamp): ?>
-                    <h1>Display All Users: <?php echo date('Y-m-d H:i A', $thisTimestamp); ?>)</h1>
+                    <h1>Display All Users<br />(<?php echo date('Y-m-d H:i A', $thisTimestamp); ?>)</h1>
                     <h3>Summary</h3>
                     <p>Total Storage Used: <?php echo $allUsers['totalStorage'] / (1024 * 1024 * 1024) . ' GB.'; ?></p>
                     <p>Total Users: <?php echo $allUsers['totalUsers']; ?></p>
-                <?php elseif($thisPage == 'getAllUsers' && !$thisTimestamp): ?>
-                    <h1>Select which time to get stats for</h1>
+                <?php elseif($thisPage == 'getAllUsers' && !$thisTimestamp): $allUsers = getServiceRecordsFromDatabase(); ?>
+                    <h1>Select the time to get users for</h1>
+                    <p>This is the list of times that the database was updated with live data.</p>
                 <?php endif; ?>
                     <?php if($thisPage == 'getAllUsers' && !$thisTimestamp): ?>
                         <table class="table table-hover table-striped">
                             <thead>
                                 <th>timestamp</th>
+                                <th>total users</th>
+                                <th>total storage</th>
                             </thead>
                             <tbody>        
                                 <?php foreach ($allUsers as $user): ?>
@@ -415,6 +382,9 @@
                                                 <a href="index.php?page=getAllUsers&timestamp=<?php echo $user['timestamp']; ?>" title="View users from <?php echo date('Y-m-d H:i A', $user['timestamp']) ;?>">
                                                     <?php echo date('Y-m-d H:i A', $user['timestamp']); ?></td>
                                                 </a>
+                                            </td>
+                                            <td><?php echo $user['totalUsers']; ?></td>
+                                            <td><?php echo $user['totalStorage'] / (1024 * 1024 * 1024) . ' GB'; ?></td>
                                         </tr>
                                 <?php endforeach; ?>   
                             </tbody> 
@@ -457,20 +427,21 @@
                             </tbody> 
                         </table>
                     <?php endif; ?>
-            </div>
+            
           </div><!-- /.container -->
 
 
           <!-- Bootstrap core JavaScript
           ================================================== -->
           <!-- Placed at the end of the document so the pages load faster -->
-          <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+                      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
         </body>
+
       </html>
     
     <?php endif; ?>
 
-    
     <?php 
     
     function getBoxTokenFromCode($code, $boxAppConfigArray) {
@@ -663,6 +634,51 @@
         
     }
     
+    function getServiceRecordsFromDatabase($timestamp = false)
+    {
+        
+        // Create connection
+        $conn = dbConnect();
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        } 
+        
+        $returnArray = array();
+        
+        if($timestamp) {
+            $sql = "SELECT * FROM service_stats WHERE timestamp = '$timestamp'";
+            $result = $conn->query($sql);
+
+            if ($result->num_rows > 0) {
+                while($row = $result->fetch_assoc()) {
+                    $returnArray[] = $row;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            $sql = "SELECT * FROM service_stats ORDER BY timestamp DESC";
+            $result = $conn->query($sql);
+            $returnArray = array();
+
+            if ($result->num_rows > 0) {
+                while($row = $result->fetch_assoc()) {
+                    $returnArray[] = $row;
+                }
+            } else {
+                return false;
+            }
+        }
+        
+        $conn->close();
+        
+        //echo '<pre>'; print_r($returnArray); die('ghfuysdhajfkds');
+        
+        return $returnArray;
+        
+    }
+    
     function getUserRecordsFromDatabase($timestamp = false)
     {
         
@@ -693,7 +709,7 @@
                 return false;
             }
         } else {
-            $sql = "SELECT timestamp FROM user_stats GROUP BY timestamp";
+            $sql = "SELECT timestamp FROM user_stats GROUP BY timestamp ORDER BY timestamp DESC";
             $result = $conn->query($sql);
             $returnArray = array();
 
