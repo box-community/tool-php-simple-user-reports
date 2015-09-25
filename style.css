@@ -5,3 +5,11 @@ body {
   padding: 40px 15px;
   text-align: center;
 }
+
+.chart {
+    margin-bottom: 25px; 
+}
+
+table#datatableData {
+    display:none;
+}

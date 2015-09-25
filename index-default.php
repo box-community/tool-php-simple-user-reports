@@ -1,4 +1,5 @@
 <?php
+    // version 1.1
     error_reporting(E_ALL);
     ini_set("display_errors", 1);
     date_default_timezone_set('America/New_York');
@@ -42,7 +43,6 @@
             'clientId'      => '', // from box dev console for your app
             'clientSecret'  => '', // from box dev console for your app
             'csrfPreventionString' => '', // for checking to make sure the returned information came from you and not a man-in-the-middle
-            // dont change the next 2 things unless directed to in an upgrade later
             'redirectUri'   => $myAppConfigArray['baseUrl'] . '/index.php?page=exchange-code-for-token', // the URL to return to, to convert the code for an access & refresh token set
             'apiBaseUrl'    => 'https://api.box.com/2.0/', // base URL for the box api calls
         );
@@ -201,6 +201,8 @@
                 <form action="<?php echo "https://app.box.com/api/oauth2/authorize?response_type=code&client_id=" . $boxAppConfigArray['clientId'] . "&state=" . $boxAppConfigArray['csrfPreventionString']; ?>" method="POST" title="Get Box Dev Token form">
                     <p><input class="btn btn-success" type="submit" name="submit" value="Begin Box Token Process"></p>
                 </form>
+                
+                <?php getStats(); ?>
             
           </div><!-- /.container -->          
                         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
@@ -323,8 +325,16 @@
                 <title>Box Reports</title>
                 <!-- Bootstrap core CSS -->
                 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+                <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+                <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+                <script src="http://code.highcharts.com/highcharts.js"></script>
+                <script src="http://code.highcharts.com/modules/data.js"></script>
+                <script src="http://code.highcharts.com/modules/exporting.js"></script>
+                <link rel="stylesheet" href="datepicker/css/datepicker.css">
+                <script src="datepicker/js/bootstrap-datepicker.js"></script>
                 <!-- Custom styles for this template -->
                 <link href="style.css" rel="stylesheet">
+                <script src="chart.js"></script>
               </head>
               <body>
                 <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -369,6 +379,20 @@
                     <p>This is the list of times that the database was updated with live data.</p>
                 <?php endif; ?>
                     <?php if($thisPage == 'getAllUsers' && !$thisTimestamp): ?>
+                        <?php
+                            $stats = getStats(); ?>    
+                    
+                        <h3>Summary Charts</h3>
+                    
+                        <textarea style="display: none;" id="chartType">spline</textarea>
+                        <textarea style="display: none;" id="statsByDateData"><?php echo json_encode($stats['date']); ?></textarea>
+                        <p>    
+                            <div class="chart" id="statsByTotalUsersChart" style="width:100%; height:300px;"></div>
+                        </p>
+                        <p>    
+                            <div class="chart" id="statsByTotalStorageChart" style="width:100%; height:300px;"></div>
+                        </p>
+                        <h3>Summary Data</h3>
                         <table class="table table-hover table-striped">
                             <thead>
                                 <th>timestamp</th>
@@ -429,13 +453,6 @@
                     <?php endif; ?>
             
           </div><!-- /.container -->
-
-
-          <!-- Bootstrap core JavaScript
-          ================================================== -->
-          <!-- Placed at the end of the document so the pages load faster -->
-                      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
         </body>
 
       </html>
@@ -634,6 +651,15 @@
         
     }
     
+    function dbConnectPdo()
+    {
+        $dbConnectionArray = dbConnectionArray();
+        $dbh = new PDO("mysql:host=" . $dbConnectionArray['host'] . ";dbname=" . $dbConnectionArray['database'] . "", $dbConnectionArray['username'], $dbConnectionArray['password']);
+        
+        return $dbh;
+        
+    }
+    
     function getServiceRecordsFromDatabase($timestamp = false)
     {
         
@@ -815,4 +841,76 @@
 
         return $result;
         
+    }
+    
+    function getStats($fromTime = 1442721600, $toTime = 0) {
+        
+        if($toTime == 0) {
+            $toTime = time();
+        }
+        
+        $returnArray = array();
+        try {
+                $query = "SELECT * FROM service_stats WHERE timestamp > $fromTime AND timestamp < $toTime";
+
+                $dbh = dbConnectPdo();
+                $stmt = $dbh->prepare($query);
+                $stmt->execute();
+                $results = $stmt->fetchAll();
+                $dbh = null;
+        } catch (PDOException $e) {
+                $msg = 'Database error while fetching: ' . $e->getMessage();
+                error_log($msg);
+                die($msg);
+        }
+        
+        $range = createDateRangeArray(date('Y-m-d', $fromTime), date('Y-m-d', $toTime), 'Y-m-d');
+        foreach($range as $day) {
+            $returnArray['date'][$day]['totalUsers'] = 0;
+            $returnArray['date'][$day]['totalStorage'] = 0 . ' TB';
+        }
+        
+        if(count($results > 0)) {
+            
+            foreach($results as $r) {
+                
+                $thisDay = date('Y-m-d', $r['timestamp']);
+                
+                $returnArray['date'][$thisDay]['totalUsers'] = $r['totalUsers'];
+                $returnArray['date'][$thisDay]['totalStorage'] = round(($r['totalStorage'] / (1024 * 1024 * 1024)), 2) . ' GB';
+                
+            }
+        }
+        /*
+        echo'<pre>';
+        print_r($returnArray);
+        die();
+        */
+        return $returnArray;
+        
+    }
+    
+    function createDateRangeArray($strDateFrom,$strDateTo, $format = 'Y-m-d') 
+    {
+        // takes two dates formatted as YYYY-MM-DD and creates an
+        // inclusive array of the dates between the from and to dates.
+
+        // could test validity of dates here but I'm already doing
+        // that in the main script
+
+        $aryRange=array();
+
+        $iDateFrom=mktime(1,0,0,substr($strDateFrom,5,2),     substr($strDateFrom,8,2),substr($strDateFrom,0,4));
+        $iDateTo=mktime(1,0,0,substr($strDateTo,5,2),     substr($strDateTo,8,2),substr($strDateTo,0,4));
+
+        if ($iDateTo>=$iDateFrom)
+        {
+            array_push($aryRange,date($format,$iDateFrom)); // first entry
+            while ($iDateFrom<$iDateTo)
+            {
+                $iDateFrom+=86400; // add 24 hours
+                array_push($aryRange,date($format,$iDateFrom));
+            }
+        }
+        return $aryRange;
     }
