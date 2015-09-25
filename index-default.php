@@ -42,9 +42,9 @@
             'clientId'      => '', // from box dev console for your app
             'clientSecret'  => '', // from box dev console for your app
             'csrfPreventionString' => '', // for checking to make sure the returned information came from you and not a man-in-the-middle
-            // dont change anything under here
-            'redirectUri'   => $myAppConfigArray['baseUrl'] . '/index.php?page=exchange-code-for-token', // don't change this.
-            'apiBaseUrl'    => 'https://api.box.com/2.0/', // base URL for the box api calls. Dont change this.
+            // dont change the next 2 things unless directed to in an upgrade later
+            'redirectUri'   => $myAppConfigArray['baseUrl'] . '/index.php?page=exchange-code-for-token', // the URL to return to, to convert the code for an access & refresh token set
+            'apiBaseUrl'    => 'https://api.box.com/2.0/', // base URL for the box api calls
         );
     }
     
@@ -647,7 +647,10 @@
         $returnArray = array();
         
         if($timestamp) {
-            $sql = "SELECT * FROM service_stats WHERE timestamp = '$timestamp'";
+            
+            $escapedTimestamp = $conn->real_escape_string($timestamp); 
+            
+            $sql = "SELECT * FROM service_stats WHERE timestamp = '$escapedTimestamp'";
             $result = $conn->query($sql);
 
             if ($result->num_rows > 0) {
@@ -689,8 +692,10 @@
             die("Connection failed: " . $conn->connect_error);
         } 
         
+        $escapedTimestamp = $conn->real_escape_string($timestamp); 
+        
         if($timestamp) {
-            $sql = "SELECT * FROM user_stats WHERE timestamp = '$timestamp'";
+            $sql = "SELECT * FROM user_stats WHERE timestamp = '$escapedTimestamp'";
             $result = $conn->query($sql);
 
             $returnArray = array(
@@ -781,15 +786,16 @@
     function updateRefreshTokenInDatabase($tokenString)
     {
         
-        // Create connection
         $conn = dbConnect();
         // Check connection
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
         } 
-        
-        $result = $conn->query("UPDATE `tokens` SET value = '$tokenString' WHERE varName = 'refresh_token'");
-        
+        $stmt = $conn->prepare("UPDATE `tokens` SET value = ? WHERE varName = 'refresh_token'");
+        $stmt->bind_param('s', $tokenString);
+
+        $result = $stmt->execute();
+
         return $result;
         
     }
@@ -797,15 +803,16 @@
     function updateAccessTokenInDatabase($tokenString)
     {
         
-        // Create connection
         $conn = dbConnect();
         // Check connection
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
         } 
-        
-        $result = $conn->query("UPDATE `tokens` SET value = '$tokenString' WHERE varName = 'access_token'");
-        
+        $stmt = $conn->prepare("UPDATE `tokens` SET value = ? WHERE varName = 'access_token'");
+        $stmt->bind_param('s', $tokenString);
+
+        $result = $stmt->execute();
+
         return $result;
         
     }
