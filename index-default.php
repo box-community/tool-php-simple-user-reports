@@ -1,5 +1,5 @@
 <?php
-    // version 1.1
+    // version 1.2
     error_reporting(E_ALL);
     ini_set("display_errors", 1);
     date_default_timezone_set('America/New_York');
@@ -201,8 +201,6 @@
                 <form action="<?php echo "https://app.box.com/api/oauth2/authorize?response_type=code&client_id=" . $boxAppConfigArray['clientId'] . "&state=" . $boxAppConfigArray['csrfPreventionString']; ?>" method="POST" title="Get Box Dev Token form">
                     <p><input class="btn btn-success" type="submit" name="submit" value="Begin Box Token Process"></p>
                 </form>
-                
-                <?php getStats(); ?>
             
           </div><!-- /.container -->          
                         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
@@ -325,16 +323,9 @@
                 <title>Box Reports</title>
                 <!-- Bootstrap core CSS -->
                 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-                <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-                <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-                <script src="http://code.highcharts.com/highcharts.js"></script>
-                <script src="http://code.highcharts.com/modules/data.js"></script>
-                <script src="http://code.highcharts.com/modules/exporting.js"></script>
-                <link rel="stylesheet" href="datepicker/css/datepicker.css">
-                <script src="datepicker/js/bootstrap-datepicker.js"></script>
                 <!-- Custom styles for this template -->
                 <link href="style.css" rel="stylesheet">
-                <script src="chart.js"></script>
+                <link href="tablesorter/theme.blue.css" rel="stylesheet">
               </head>
               <body>
                 <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -379,21 +370,7 @@
                     <p>This is the list of times that the database was updated with live data.</p>
                 <?php endif; ?>
                     <?php if($thisPage == 'getAllUsers' && !$thisTimestamp): ?>
-                        <?php
-                            $stats = getStats(); ?>    
-                    
-                        <h3>Summary Charts</h3>
-                    
-                        <textarea style="display: none;" id="chartType">spline</textarea>
-                        <textarea style="display: none;" id="statsByDateData"><?php echo json_encode($stats['date']); ?></textarea>
-                        <p>    
-                            <div class="chart" id="statsByTotalUsersChart" style="width:100%; height:300px;"></div>
-                        </p>
-                        <p>    
-                            <div class="chart" id="statsByTotalStorageChart" style="width:100%; height:300px;"></div>
-                        </p>
-                        <h3>Summary Data</h3>
-                        <table class="table table-hover table-striped">
+                        <table id="myTable" class="table table-hover table-striped">
                             <thead>
                                 <th>timestamp</th>
                                 <th>total users</th>
@@ -414,14 +391,17 @@
                             </tbody> 
                         </table>
                     <?php else: ?>
-                        <table class="table table-hover table-striped">
+                        <table id="myTable" class="table table-hover table-striped tablesorter-blue">
                             <thead>
                                 <th>login</th>
                                 <th>name</th>
                                 <th>created_at</th>
                                 <th>modified_at</th>
                                 <th>space_amount</th>
-                                <th>space_used</th>
+                                <th>space_used (raw)</th>
+                                <th>space_used (MB)</th>
+                                <th>space_used (GB)</th>
+                                <th>space_used (TB)</th>
                                 <th>status</th>
                             </thead>
                             <tbody>        
@@ -434,6 +414,9 @@
                                         <td><?php echo $user->modified_at; ?></td>
                                         <td><?php echo $user->space_amount; ?></td>
                                         <td><?php echo $user->space_used; ?></td>
+                                        <td><?php echo (!empty($user->space_used)) ? number_format($user->space_used / 1024, 2) : 0; ?></td>
+                                        <td><?php echo (!empty($user->space_used)) ? number_format($user->space_used / (1024 * 1024), 2) : 0; ?></td>
+                                        <td><?php echo (!empty($user->space_used)) ? number_format($user->space_used / (1024 * 1024 * 1024), 2) : 0; ?></td>
                                         <td><?php echo $user->status; ?></td>
                                     </tr>
                                     <?php else: ?>
@@ -444,6 +427,9 @@
                                         <td><?php echo $user['modified_at']; ?></td>
                                         <td><?php echo $user['space_amount']; ?></td>
                                         <td><?php echo $user['space_used']; ?></td>
+                                        <td><?php echo (!empty($user['space_used'])) ? number_format($user['space_used'] / 1024, 2) : 0; ?></td>
+                                        <td><?php echo (!empty($user['space_used'])) ? number_format($user['space_used'] / (1024 * 1024), 2) : 0; ?></td>
+                                        <td><?php echo (!empty($user['space_used'])) ? number_format($user['space_used'] / (1024 * 1024 * 1024), 2) : 0; ?></td>
                                         <td><?php echo $user['status']; ?></td>
                                     </tr>
                                     <?php endif; ?>
@@ -453,6 +439,16 @@
                     <?php endif; ?>
             
           </div><!-- /.container -->
+
+
+          <!-- Bootstrap core JavaScript
+          ================================================== -->
+          <!-- Placed at the end of the document so the pages load faster -->
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+            <script src="tablesorter/jquery-1.2.6.min"></script>
+            <script src="tablesorter/jquery.tablesorter.min.js"></script>
+            <script src="script.js"></script>
         </body>
 
       </html>
@@ -651,15 +647,6 @@
         
     }
     
-    function dbConnectPdo()
-    {
-        $dbConnectionArray = dbConnectionArray();
-        $dbh = new PDO("mysql:host=" . $dbConnectionArray['host'] . ";dbname=" . $dbConnectionArray['database'] . "", $dbConnectionArray['username'], $dbConnectionArray['password']);
-        
-        return $dbh;
-        
-    }
-    
     function getServiceRecordsFromDatabase($timestamp = false)
     {
         
@@ -673,10 +660,7 @@
         $returnArray = array();
         
         if($timestamp) {
-            
-            $escapedTimestamp = $conn->real_escape_string($timestamp); 
-            
-            $sql = "SELECT * FROM service_stats WHERE timestamp = '$escapedTimestamp'";
+            $sql = "SELECT * FROM service_stats WHERE timestamp = '$timestamp'";
             $result = $conn->query($sql);
 
             if ($result->num_rows > 0) {
@@ -718,10 +702,8 @@
             die("Connection failed: " . $conn->connect_error);
         } 
         
-        $escapedTimestamp = $conn->real_escape_string($timestamp); 
-        
         if($timestamp) {
-            $sql = "SELECT * FROM user_stats WHERE timestamp = '$escapedTimestamp'";
+            $sql = "SELECT * FROM user_stats WHERE timestamp = '$timestamp'";
             $result = $conn->query($sql);
 
             $returnArray = array(
@@ -812,16 +794,15 @@
     function updateRefreshTokenInDatabase($tokenString)
     {
         
+        // Create connection
         $conn = dbConnect();
         // Check connection
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
         } 
-        $stmt = $conn->prepare("UPDATE `tokens` SET value = ? WHERE varName = 'refresh_token'");
-        $stmt->bind_param('s', $tokenString);
-
-        $result = $stmt->execute();
-
+        
+        $result = $conn->query("UPDATE `tokens` SET value = '$tokenString' WHERE varName = 'refresh_token'");
+        
         return $result;
         
     }
@@ -829,88 +810,15 @@
     function updateAccessTokenInDatabase($tokenString)
     {
         
+        // Create connection
         $conn = dbConnect();
         // Check connection
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
         } 
-        $stmt = $conn->prepare("UPDATE `tokens` SET value = ? WHERE varName = 'access_token'");
-        $stmt->bind_param('s', $tokenString);
-
-        $result = $stmt->execute();
-
+        
+        $result = $conn->query("UPDATE `tokens` SET value = '$tokenString' WHERE varName = 'access_token'");
+        
         return $result;
         
-    }
-    
-    function getStats($fromTime = 1442721600, $toTime = 0) {
-        
-        if($toTime == 0) {
-            $toTime = time();
-        }
-        
-        $returnArray = array();
-        try {
-                $query = "SELECT * FROM service_stats WHERE timestamp > $fromTime AND timestamp < $toTime";
-
-                $dbh = dbConnectPdo();
-                $stmt = $dbh->prepare($query);
-                $stmt->execute();
-                $results = $stmt->fetchAll();
-                $dbh = null;
-        } catch (PDOException $e) {
-                $msg = 'Database error while fetching: ' . $e->getMessage();
-                error_log($msg);
-                die($msg);
-        }
-        
-        $range = createDateRangeArray(date('Y-m-d', $fromTime), date('Y-m-d', $toTime), 'Y-m-d');
-        foreach($range as $day) {
-            $returnArray['date'][$day]['totalUsers'] = 0;
-            $returnArray['date'][$day]['totalStorage'] = 0 . ' TB';
-        }
-        
-        if(count($results > 0)) {
-            
-            foreach($results as $r) {
-                
-                $thisDay = date('Y-m-d', $r['timestamp']);
-                
-                $returnArray['date'][$thisDay]['totalUsers'] = $r['totalUsers'];
-                $returnArray['date'][$thisDay]['totalStorage'] = round(($r['totalStorage'] / (1024 * 1024 * 1024)), 2) . ' GB';
-                
-            }
-        }
-        /*
-        echo'<pre>';
-        print_r($returnArray);
-        die();
-        */
-        return $returnArray;
-        
-    }
-    
-    function createDateRangeArray($strDateFrom,$strDateTo, $format = 'Y-m-d') 
-    {
-        // takes two dates formatted as YYYY-MM-DD and creates an
-        // inclusive array of the dates between the from and to dates.
-
-        // could test validity of dates here but I'm already doing
-        // that in the main script
-
-        $aryRange=array();
-
-        $iDateFrom=mktime(1,0,0,substr($strDateFrom,5,2),     substr($strDateFrom,8,2),substr($strDateFrom,0,4));
-        $iDateTo=mktime(1,0,0,substr($strDateTo,5,2),     substr($strDateTo,8,2),substr($strDateTo,0,4));
-
-        if ($iDateTo>=$iDateFrom)
-        {
-            array_push($aryRange,date($format,$iDateFrom)); // first entry
-            while ($iDateFrom<$iDateTo)
-            {
-                $iDateFrom+=86400; // add 24 hours
-                array_push($aryRange,date($format,$iDateFrom));
-            }
-        }
-        return $aryRange;
     }
