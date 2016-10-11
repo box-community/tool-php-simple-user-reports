@@ -62,4 +62,9 @@ Follow that? No? Ok, here goes:
 6. That's it. Visit your http://localhost/box-reports/index.php (or equivalent) and you now have an updated version of this super simple app.
 
 
+## 2016-10-11 Update Instructions
+This update includes the ability to update users' status, which requires a new field in the database.
 
+If this is your first installation, simply use the install.sql file.
+
+If you are upgrading, then just add a BIGINT(20) field named "box_user_id" to the user_stats table.

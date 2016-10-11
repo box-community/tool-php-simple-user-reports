@@ -12,6 +12,7 @@ VALUES
 
 CREATE TABLE `user_stats` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `box_user_id` bigint(20) DEFAULT NULL,  
   `name` varchar(255) DEFAULT NULL,
   `login` varchar(255) DEFAULT NULL,
   `created_at` varchar(255) DEFAULT NULL,

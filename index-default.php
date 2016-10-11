@@ -58,7 +58,10 @@
   
 ?>
 
-<?php $thisPage = filter_input(INPUT_GET, 'page'); // check which page is being requested ?>
+<?php 
+    $thisPage = filter_input(INPUT_GET, 'page'); // check which page is being requested 
+    $thisPageAction = filter_input(INPUT_GET, 'action'); // check which page action is being requested 
+?>
 
 <?php if (empty($thisPage)): ?>
 
@@ -94,7 +97,8 @@
                         <li><a href="index.php?page=getOneTimeToken">Get Token</a></li>
                         <li><a href="index.php?page=getAllUsersLive">Get Live Data</a></li>
                         <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get Live & Update DB</a></li>
-                        <li><a href="index.php?page=getAllUsers">View Local Data</a></li>
+                        <li><a href="index.php?page=getAllUsers">Local Data</a></li>
+                        <li><a href="index.php?page=updateUserStatus">Update User Status</a></li>
                       </ul>
                     </div><!--/.nav-collapse -->
                   </div>
@@ -187,7 +191,8 @@
                         <li><a href="index.php?page=getOneTimeToken">Get Token</a></li>
                         <li><a href="index.php?page=getAllUsersLive">Get Live Data</a></li>
                         <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get Live & Update DB</a></li>
-                        <li><a href="index.php?page=getAllUsers">View Local Data</a></li>
+                        <li><a href="index.php?page=getAllUsers">Local Data</a></li>
+                        <li><a href="index.php?page=updateUserStatus">Update User Status</a></li>
                       </ul>
                     </div><!--/.nav-collapse -->
                   </div>
@@ -274,7 +279,8 @@
                         <li><a href="index.php?page=getOneTimeToken">Get Token</a></li>
                         <li><a href="index.php?page=getAllUsersLive">Get Live Data</a></li>
                         <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get Live & Update DB</a></li>
-                        <li><a href="index.php?page=getAllUsers">View Local Data</a></li>
+                        <li><a href="index.php?page=getAllUsers">Local Data</a></li>
+                        <li><a href="index.php?page=updateUserStatus">Update User Status</a></li>
                       </ul>
                     </div><!--/.nav-collapse -->
                   </div>
@@ -354,7 +360,8 @@
                         <li><a href="index.php?page=getOneTimeToken">Get Token</a></li>
                         <li><a href="index.php?page=getAllUsersLive">Get Live Data</a></li>
                         <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get Live & Update DB</a></li>
-                        <li><a href="index.php?page=getAllUsers">View Local Data</a></li>
+                        <li><a href="index.php?page=getAllUsers">Local Data</a></li>
+                        <li><a href="index.php?page=updateUserStatus">Update User Status</a></li>
                       </ul>
                     </div><!--/.nav-collapse -->
                   </div>
@@ -452,6 +459,154 @@
                         </table>
                     <?php endif; ?>
             
+          </div><!-- /.container -->
+        </body>
+
+      </html>
+      
+    <?php elseif($thisPage == 'updateUserStatus'):
+
+            if($thisPageAction == 'processUpdates') {
+                
+                $userArrayToBeProcessed = filter_input(INPUT_POST, 'updateUserList', FILTER_DEFAULT , FILTER_REQUIRE_ARRAY); // get the list of user ID's to process
+                $newStatus = filter_input(INPUT_POST, 'newStatus'); // get the list of user ID's to process
+                /*
+                echo '<pre>'; 
+                print_r($newStatus); 
+                print_r($userArrayToBeProcessed); 
+                die(__CLASS__ . ':' . __LINE__);
+                */
+                $resultArray = array();
+                foreach($userArrayToBeProcessed as $key => $boxUserId):
+                    
+                    $resultArray[$boxUserId] = updateUserStatus($boxUserId, $newStatus);
+                    
+                endforeach;
+                
+            } else {
+            
+                $thisTimestamp = filter_input(INPUT_GET, 'timestamp');
+
+                $allUsers = getUserRecordsFromDatabase('LATEST');
+                
+                //echo '<pre>'; print_r($allUsers); die(__CLASS__ . ':' . __LINE__);
+                
+                if(empty($allUsers)): 
+                    die('no users found in the database'); 
+                endif; 
+            } 
+            
+
+    ?> 
+    <!-- page to display all users --> 
+    <!DOCTYPE html>
+            <html lang="en">
+              <head>
+                <meta charset="utf-8">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Box Reports</title>
+                <!-- Bootstrap core CSS -->
+                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+                <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+                <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+                <script src="http://code.highcharts.com/highcharts.js"></script>
+                <script src="http://code.highcharts.com/modules/data.js"></script>
+                <script src="http://code.highcharts.com/modules/exporting.js"></script>
+                <link rel="stylesheet" href="datepicker/css/datepicker.css">
+                <script src="datepicker/js/bootstrap-datepicker.js"></script>
+                <!-- Custom styles for this template -->
+                <link href="style.css" rel="stylesheet">
+                <script src="chart.js"></script>
+              </head>
+              <body>
+                <nav class="navbar navbar-inverse navbar-fixed-top">
+                  <div class="container">
+                    <div class="navbar-header">
+                      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                      </button>
+                      <a class="navbar-brand" href="index.php">Box Reports</a>
+                    </div>
+                    <div id="navbar" class="collapse navbar-collapse">
+                      <ul class="nav navbar-nav">
+                        <li class="active"><a href="index.php">Home</a></li>
+                        <li><a href="index.php?page=getOneTimeToken">Get Token</a></li>
+                        <li><a href="index.php?page=getAllUsersLive">Get Live Data</a></li>
+                        <li><a href="index.php?page=getAllUsersLive&updateDatabaseToo=1">Get Live & Update DB</a></li>
+                        <li><a href="index.php?page=getAllUsers">Local Data</a></li>
+                        <li><a href="index.php?page=updateUserStatus">Update User Status</a></li>
+                      </ul>
+                    </div><!--/.nav-collapse -->
+                  </div>
+                </nav>
+
+                <div class="container">
+              
+                <?php if($thisPageAction != 'processUpdates'): ?>
+                    <h1>Display All Users</h1>
+                    <form action="index.php?page=updateUserStatus&action=processUpdates" method="POST">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <th>login</th>
+                                <th>name</th>
+                                <th>created_at</th>
+                                <th>modified_at</th>
+                                <th>space_amount</th>
+                                <th>space_used</th>
+                                <th>status</th>
+                            </thead>
+                            <tbody>        
+                                <?php foreach ($allUsers['users'] as $user): ?>
+                                    
+                                    <tr>
+                                        <td><input type="checkbox" name="updateUserList[]" value="<?php echo $user['box_user_id']; ?>" /></td>
+                                        <td><?php echo $user['login']; ?></td>
+                                        <td><?php echo $user['name']; ?></td>
+                                        <td><?php echo $user['created_at']; ?></td>
+                                        <td><?php echo $user['modified_at']; ?></td>
+                                        <td><?php echo $user['space_amount']; ?></td>
+                                        <td><?php echo $user['space_used']; ?></td>
+                                        <td><?php echo $user['status']; ?></td>
+                                    </tr>
+                                <?php endforeach; ?>   
+                            </tbody> 
+                        </table>
+                        <p>
+                            <select id="newStatus" name="newStatus"/>
+                                <option value="inactive">Inactive</option>
+                                <option value="active">Active</option>
+                            </select>
+                        </p>
+                        <p>
+                            <input type="submit" name="submit" value="Update Users Now" />
+                        </p>
+                    </form>
+                    <?php else: ?>
+                    <h1>Update User Results</h1>
+                    <table class="table table-hover table-striped">
+                            <thead>
+                                <th>User</th>
+                                <th>API Result</th>
+                            </thead>
+                            <tbody>        
+                                <?php foreach ($resultArray as $boxUserId => $r): ?>
+                                    
+                                    <tr>
+                                        <td>
+                                            <?php echo $r->login . '<br />(' . $boxUserId . ')'; ?>
+                                        </td>
+                                        <td>
+                                            <?php echo '<pre>'; print_r($r); echo '</pre>'; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>   
+                            </tbody> 
+                        </table>
+                    <?php endif; ?>
           </div><!-- /.container -->
         </body>
 
@@ -616,8 +771,8 @@
                 // update database if requested
                 if($updateDatabaseToo) {
                     $conn = dbConnect();
-                    $result = $conn->query("INSERT INTO `user_stats` (name, login, created_at, modified_at, space_amount, space_used, status, timestamp) VALUES "
-                        . "('$u->name', '$u->login', '$u->created_at', '$u->modified_at', '$u->space_amount', '$u->space_used', '$u->status', '$now')");
+                    $result = $conn->query("INSERT INTO `user_stats` (box_user_id, name, login, created_at, modified_at, space_amount, space_used, status, timestamp) VALUES "
+                        . "('$u->id','$u->name', '$u->login', '$u->created_at', '$u->modified_at', '$u->space_amount', '$u->space_used', '$u->status', '$now')");
                     
                 }
             }
@@ -633,6 +788,50 @@
         }
         
         return $returnArray;
+        
+    }
+    
+    function updateUserStatus($userId, $newStatus) {
+        
+        // first refresh token
+        $refreshToken = refreshToken();
+        $accessToken = getAccessTokenFromDatabase();
+        
+        $boxAppConfigArray = boxAppConfigArray();
+        
+        $endpoint = $boxAppConfigArray['apiBaseUrl'] . '/users/' . $userId;
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $endpoint);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $accessToken
+        ));
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_VERBOSE, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");  
+        
+        
+        $parametersArray = array(
+            'status' => $newStatus,
+        );
+        
+        $data_string = json_encode($parametersArray);       
+        
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+        
+        $result = curl_exec($ch);
+
+        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        //$header = substr($result, 0, $header_size);
+        $body = json_decode(substr($result, $header_size));
+        //$header = substr($result, 0, $header_size);
+
+        if (isset($body->errors)) {
+            die(__CLASS__ . ':' . __LINE__);
+        }
+
+        return $body;
         
     }
     
@@ -720,7 +919,45 @@
         
         $escapedTimestamp = $conn->real_escape_string($timestamp); 
         
-        if($timestamp) {
+        if($timestamp == 'LATEST') {
+            
+            $sql = "SELECT timestamp FROM user_stats ORDER BY timestamp DESC LIMIT 1";
+            $result = $conn->query($sql);
+
+            $returnArray = array(
+                'users' => array(),
+                'totalUsers' => 0,
+                'totalStorage' => 0,
+            );
+
+            if ($result->num_rows > 0) {
+                while($row = $result->fetch_assoc()) {
+                    $latestTimestamp = $row['timestamp'];
+                }
+            } else {
+                return false;
+            }
+            
+            $sql = "SELECT * FROM user_stats WHERE timestamp = '$latestTimestamp'";
+            
+            $result = $conn->query($sql);
+
+            $returnArray = array(
+                'users' => array(),
+                'totalUsers' => 0,
+                'totalStorage' => 0,
+            );
+
+            if ($result->num_rows > 0) {
+                while($row = $result->fetch_assoc()) {
+                    $returnArray['users'][] = $row;
+                    $returnArray['totalUsers']++;
+                    $returnArray['totalStorage'] = $returnArray['totalStorage'] + $row['space_used'];
+                }
+            } else {
+                return false;
+            }
+        } elseif ($timestamp) {
             $sql = "SELECT * FROM user_stats WHERE timestamp = '$escapedTimestamp'";
             $result = $conn->query($sql);
 
