@@ -1,3 +1,7 @@
+<img src="images/box-dev-logo-clip.png" 
+alt= “box-dev-logo” 
+style="margin-left:-10px;"
+width=40%;>
 ## Synopsis
 
 This is a very simple PHP-based process for getting Box user statistics via API, and optionally saving the data to a database. As of Oct 11th, 2016, you can also update users' status (active/inactive) too.
